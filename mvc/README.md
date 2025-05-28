@@ -23,7 +23,7 @@ Sistema desenvolvido para monitorar e analisar a postura do usuário em tempo re
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/analise-postura.git
+git clone https://github.com/JoaoOliveiraaa/python-posture-analyzer-software.git
 cd analise-postura
 ```
 
@@ -89,6 +89,6 @@ Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para d
 
 ## Contato
 
-Seu Nome - seu.email@exemplo.com
+João Pedro Cunha de Oliveira - oficialjoaocunha@Yahoo.com
 
-Link do Projeto: [https://github.com/seu-usuario/analise-postura](https://github.com/seu-usuario/analise-postura) 
+Link do Projeto: [https://github.com/JoaoOliveiraaa/python-posture-analyzer-software](https://github.com/JoaoOliveiraaa/python-posture-analyzer-software) 

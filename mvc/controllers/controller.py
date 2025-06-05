@@ -9,21 +9,27 @@ import time
 import winsound
 import threading
 from datetime import datetime, timedelta
+import json
+import os
 
 class Controller:
-    def __init__(self, model, root):
+    def __init__(self, model):
         self.model = model
-        self.view = View(root, self)
         self.cap = None
         self.is_running = False
         self.camera_index = 0
         self.resolution = (640, 480)
         self.fps = 30
         
+        # Carregar configurações
+        self.config = self._carregar_configuracoes()
+        self._aplicar_configuracoes()
+        
         # Variáveis para controle de alertas
         self.ultimo_alerta = 0
-        self.intervalo_alerta = 5  # segundos entre alertas
-        self.alerta_sonoro_ativado = True
+        self.intervalo_alerta = self.config["alerta"]["intervalo"]
+        self.alerta_sonoro_ativado = self.config["alerta"]["sonoro"]
+        self.alerta_visual_ativado = self.config["alerta"]["visual"]
         self.tempo_postura_incorreta = 0
         self.tempo_limite_alerta = 10  # segundos em postura incorreta antes do alerta
         
@@ -49,6 +55,88 @@ class Controller:
         self.thread_estatisticas = threading.Thread(target=self._atualizar_estatisticas_periodicamente)
         self.thread_estatisticas.daemon = True
         self.thread_estatisticas.start()
+
+    def _carregar_configuracoes(self):
+        """Carrega as configurações do arquivo JSON"""
+        config_file = "config.json"
+        if os.path.exists(config_file):
+            try:
+                with open(config_file, 'r') as f:
+                    return json.load(f)
+            except:
+                return self._configuracoes_padrao()
+        return self._configuracoes_padrao()
+
+    def _configuracoes_padrao(self):
+        """Retorna as configurações padrão"""
+        return {
+            "camera": {
+                "index": 0,
+                "resolucao": "640x480"
+            },
+            "alerta": {
+                "sonoro": True,
+                "visual": True,
+                "intervalo": 30
+            },
+            "postura": {
+                "angulo_ombro_min": 80,
+                "angulo_ombro_max": 100,
+                "angulo_quadril_min": 85,
+                "angulo_quadril_max": 95
+            },
+            "interface": {
+                "tema": "dark",
+                "fonte": "Helvetica",
+                "tamanho_fonte": 12
+            }
+        }
+
+    def _aplicar_configuracoes(self):
+        """Aplica as configurações carregadas"""
+        self.camera_index = self.config["camera"]["index"]
+        width, height = map(int, self.config["camera"]["resolucao"].split('x'))
+        self.resolution = (width, height)
+        self.alerta_sonoro_ativado = self.config["alerta"]["sonoro"]
+        self.alerta_visual_ativado = self.config["alerta"]["visual"]
+        self.intervalo_alerta = self.config["alerta"]["intervalo"]
+
+    def atualizar_configuracoes(self, novas_config):
+        """Atualiza as configurações do sistema"""
+        self.config = novas_config
+        self._aplicar_configuracoes()
+        
+        # Reiniciar monitoramento se estiver ativo
+        if self.is_running:
+            self.parar_monitoramento()
+            self.iniciar_monitoramento()
+
+    def get_estatisticas_periodo(self, data_inicio, data_fim):
+        """Obtém estatísticas para o período especificado"""
+        try:
+            # Obter dados do modelo
+            dados = self.model.get_estatisticas_periodo(data_inicio, data_fim)
+            
+            # Calcular tempo total em horas
+            tempo_total = (dados['tempo_postura_correta'] + dados['tempo_postura_incorreta']) / 3600
+            
+            # Calcular percentual de postura correta
+            total_tempo = dados['tempo_postura_correta'] + dados['tempo_postura_incorreta']
+            percentual_correto = (dados['tempo_postura_correta'] / total_tempo * 100) if total_tempo > 0 else 0
+            
+            return {
+                'datas': dados['datas'],
+                'percentuais': dados['percentuais'],
+                'tempo_postura_correta': dados['tempo_postura_correta'],
+                'tempo_postura_incorreta': dados['tempo_postura_incorreta'],
+                'tempo_total': round(tempo_total, 1),
+                'percentual_correto': round(percentual_correto, 1),
+                'total_alertas': dados['total_alertas'],
+                'total_sessoes': dados['total_sessoes']
+            }
+        except Exception as e:
+            print(f"[ERRO] Falha ao obter estatísticas: {str(e)}")
+            return None
 
     def iniciar_monitoramento(self):
         if not self.is_running:
@@ -229,8 +317,11 @@ class Controller:
 
     def verificar_postura_correta(self, angulo_ombros: float, angulo_quadril: float) -> bool:
         """Verifica se a postura está correta baseado nos ângulos"""
-        # Valores de referência para postura correta
-        return angulo_ombros < 5 and angulo_quadril < 5
+        # Usa os valores das configurações
+        return (
+            self.config["postura"]["angulo_ombro_min"] <= angulo_ombros <= self.config["postura"]["angulo_ombro_max"] and
+            self.config["postura"]["angulo_quadril_min"] <= angulo_quadril <= self.config["postura"]["angulo_quadril_max"]
+        )
 
     def atualizar_frame(self):
         if self.is_running and self.cap is not None:
@@ -309,4 +400,7 @@ class Controller:
                 
                 print("[INFO] Estatísticas da sessão registradas")
         except Exception as e:
-            print(f"[ERRO] Falha ao registrar estatísticas da sessão: {str(e)}") 
+            print(f"[ERRO] Falha ao registrar estatísticas da sessão: {str(e)}")
+
+    def set_view(self, view):
+        self.view = view 

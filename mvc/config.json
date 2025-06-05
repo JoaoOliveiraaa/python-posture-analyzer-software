@@ -1,0 +1,22 @@
+{
+    "camera": {
+        "index": 0,
+        "resolucao": "640x480"
+    },
+    "alerta": {
+        "sonoro": 1,
+        "visual": 1,
+        "intervalo": 10
+    },
+    "postura": {
+        "angulo_ombro_min": 80,
+        "angulo_ombro_max": 100,
+        "angulo_quadril_min": 85,
+        "angulo_quadril_max": 95
+    },
+    "interface": {
+        "tema": "dark",
+        "fonte": "Helvetica",
+        "tamanho_fonte": 12
+    }
+}

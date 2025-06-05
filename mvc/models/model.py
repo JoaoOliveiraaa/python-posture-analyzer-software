@@ -182,20 +182,43 @@ class Model:
         try:
             cursor = self.conn.cursor()
             
+            # Obter estatísticas gerais
             cursor.execute('''
                 SELECT SUM(tempo_postura_correta) as tempo_correto,
                        SUM(tempo_postura_incorreta) as tempo_incorreto,
                        SUM(total_analises) as total,
                        AVG(media_angulo_ombros) as media_ombros,
-                       AVG(media_angulo_quadril) as media_quadril
+                       AVG(media_angulo_quadril) as media_quadril,
+                       COUNT(DISTINCT data) as total_sessoes
                 FROM estatisticas_diarias
                 WHERE data BETWEEN %s AND %s
             ''', (data_inicio.date(), data_fim.date()))
             
             resultado = cursor.fetchone()
             
+            # Obter dados para gráfico de evolução
+            cursor.execute('''
+                SELECT data,
+                       (tempo_postura_correta / (tempo_postura_correta + tempo_postura_incorreta) * 100) as percentual
+                FROM estatisticas_diarias
+                WHERE data BETWEEN %s AND %s
+                ORDER BY data ASC
+            ''', (data_inicio.date(), data_fim.date()))
+            
+            evolucao = cursor.fetchall()
+            
+            # Obter total de alertas
+            cursor.execute('''
+                SELECT COUNT(*) as total_alertas
+                FROM registros_postura
+                WHERE data_hora BETWEEN %s AND %s
+                AND postura_correta = FALSE
+            ''', (data_inicio, data_fim))
+            
+            total_alertas = cursor.fetchone()[0]
+            
             if resultado:
-                tempo_correto, tempo_incorreto, total, media_ombros, media_quadril = resultado
+                tempo_correto, tempo_incorreto, total, media_ombros, media_quadril, total_sessoes = resultado
                 tempo_total = tempo_correto + tempo_incorreto
                 percentual = (tempo_correto / tempo_total * 100) if tempo_total > 0 else 0
                 
@@ -205,7 +228,11 @@ class Model:
                     'total_analises': total or 0,
                     'media_angulo_ombros': media_ombros or 0,
                     'media_angulo_quadril': media_quadril or 0,
-                    'percentual_correto': percentual
+                    'percentual_correto': percentual,
+                    'total_sessoes': total_sessoes or 0,
+                    'total_alertas': total_alertas,
+                    'datas': [row[0] for row in evolucao],
+                    'percentuais': [row[1] for row in evolucao]
                 }
             
             return {
@@ -214,10 +241,84 @@ class Model:
                 'total_analises': 0,
                 'media_angulo_ombros': 0,
                 'media_angulo_quadril': 0,
-                'percentual_correto': 0
+                'percentual_correto': 0,
+                'total_sessoes': 0,
+                'total_alertas': 0,
+                'datas': [],
+                'percentuais': []
             }
         except Exception as e:
             print(f"[ERRO] Falha ao obter estatísticas do período: {str(e)}")
+            raise
+
+    def get_estatisticas_detalhadas(self, data: datetime) -> Dict:
+        """Obtém estatísticas detalhadas para um dia específico"""
+        try:
+            cursor = self.conn.cursor()
+            
+            # Estatísticas gerais do dia
+            cursor.execute('''
+                SELECT tempo_postura_correta,
+                       tempo_postura_incorreta,
+                       total_analises,
+                       media_angulo_ombros,
+                       media_angulo_quadril
+                FROM estatisticas_diarias
+                WHERE data = %s
+            ''', (data.date(),))
+            
+            resultado = cursor.fetchone()
+            
+            if not resultado:
+                return None
+            
+            # Distribuição por hora
+            cursor.execute('''
+                SELECT HOUR(data_hora) as hora,
+                       COUNT(*) as total,
+                       SUM(CASE WHEN postura_correta THEN 1 ELSE 0 END) as corretas
+                FROM registros_postura
+                WHERE DATE(data_hora) = %s
+                GROUP BY HOUR(data_hora)
+                ORDER BY hora
+            ''', (data.date(),))
+            
+            distribuicao_hora = cursor.fetchall()
+            
+            # Análise de tendências
+            cursor.execute('''
+                SELECT AVG(angulo_ombros) as media_ombros,
+                       AVG(angulo_quadril) as media_quadril,
+                       COUNT(*) as total
+                FROM registros_postura
+                WHERE DATE(data_hora) = %s
+                AND postura_correta = FALSE
+            ''', (data.date(),))
+            
+            tendencias = cursor.fetchone()
+            
+            return {
+                'estatisticas_gerais': {
+                    'tempo_postura_correta': resultado[0],
+                    'tempo_postura_incorreta': resultado[1],
+                    'total_analises': resultado[2],
+                    'media_angulo_ombros': resultado[3],
+                    'media_angulo_quadril': resultado[4]
+                },
+                'distribuicao_hora': [{
+                    'hora': row[0],
+                    'total': row[1],
+                    'corretas': row[2],
+                    'percentual': (row[2] / row[1] * 100) if row[1] > 0 else 0
+                } for row in distribuicao_hora],
+                'tendencias': {
+                    'media_angulo_ombros': tendencias[0] if tendencias else 0,
+                    'media_angulo_quadril': tendencias[1] if tendencias else 0,
+                    'total_incorretas': tendencias[2] if tendencias else 0
+                }
+            }
+        except Exception as e:
+            print(f"[ERRO] Falha ao obter estatísticas detalhadas: {str(e)}")
             raise
 
     def get_historico_postura(self, dias: int = 7) -> List[Dict]:

@@ -1,94 +1,95 @@
 # Sistema de Análise de Postura
 
-Sistema desenvolvido para monitorar e analisar a postura do usuário em tempo real, utilizando visão computacional e machine learning.
+## 📋 Descrição
+Sistema desenvolvido para análise e monitoramento de postura em tempo real utilizando webcam e inteligência artificial. O sistema é capaz de detectar e registrar diferentes tipos de posturas, auxiliando na prevenção de problemas posturais.
 
-## Funcionalidades
+## 🚀 Funcionalidades
+- Captura de vídeo em tempo real
+- Detecção de postura usando MediaPipe
+- Registro e histórico de posturas
+- Interface gráfica intuitiva
+- Exportação de dados em CSV
+- Backup automático do banco de dados
 
-- Captura de vídeo em tempo real via webcam
-- Detecção de postura usando MediaPipe Pose
-- Análise de ângulos dos ombros e quadril
-- Alertas visuais e sonoros para postura incorreta
-- Sugestões de correção de postura
-- Estatísticas detalhadas de uso
-- Exportação de dados em CSV e JSON
-- Interface gráfica moderna e intuitiva
+## 🛠️ Tecnologias Utilizadas
+- Python 3.8+
+- OpenCV
+- MediaPipe
+- SQLite3
+- PyQt6
+- NumPy
 
-## Requisitos
-
-- Python 3.8 ou superior
-- Webcam
-- Dependências listadas em `requirements.txt`
-
-## Instalação
+## 📦 Instalação
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/JoaoOliveiraaa/python-posture-analyzer-software.git
-cd analise-postura
+git clone [URL_DO_REPOSITORIO]
+cd [NOME_DO_DIRETORIO]
 ```
 
-2. Instale as dependências:
+2. Crie um ambiente virtual (recomendado):
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+```
+
+3. Instale as dependências:
 ```bash
 pip install -r requirements.txt
 ```
 
-## Uso
+## 🎮 Como Usar
 
 1. Execute o programa principal:
 ```bash
 python main.py
 ```
 
-2. Na interface gráfica:
-   - Clique em "Iniciar Monitoramento" para começar
-   - Ajuste as configurações da câmera conforme necessário
-   - Monitore sua postura em tempo real
-   - Consulte as estatísticas e exporte os dados quando desejar
+2. Na interface principal:
+   - Clique em "Iniciar Câmera" para começar a captura
+   - Use "Capturar Postura" para registrar uma postura
+   - Acesse "Histórico" para ver registros anteriores
+   - Use "Exportar" para salvar dados em CSV
 
-## Estrutura do Projeto
-
+## 📁 Estrutura do Projeto
 ```
 .
-├── controllers/
-│   └── controller.py    # Lógica de controle e processamento
-├── models/
-│   └── model.py        # Gerenciamento de dados e banco de dados
-├── views/
-│   └── view.py         # Interface gráfica
-├── main.py             # Ponto de entrada do programa
-├── requirements.txt    # Dependências do projeto
-└── README.md          # Documentação
+├── main.py              # Ponto de entrada do programa
+├── requirements.txt     # Dependências do projeto
+├── controllers/         # Controladores da aplicação
+├── models/             # Modelos e banco de dados
+├── views/              # Interface gráfica
+└── postura.db          # Banco de dados SQLite
 ```
 
-## Banco de Dados
+## 🔧 Configuração
+- Ajuste a resolução da câmera em `config.py`
+- Configure o intervalo de backup em `models/database.py`
+- Personalize os tipos de postura em `models/postura.py`
 
-O sistema utiliza SQLite para armazenar:
-- Registros de análise de postura
-- Estatísticas diárias
-- Histórico de uso
+## 📊 Banco de Dados
+O sistema utiliza SQLite3 com as seguintes tabelas:
+- `posturas`: Armazena registros de posturas
+- `configuracoes`: Configurações do sistema
 
-## Logs
+## 🔒 Backup
+- Backup automático diário
+- Localização: `backup/`
+- Formato: `postura_YYYYMMDD.db`
 
-O sistema mantém logs detalhados de:
-- Operações do banco de dados
-- Erros e exceções
-- Eventos importantes
-- Estatísticas de uso
-
-## Contribuição
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/nova-feature`)
+## 🤝 Contribuição
+1. Faça um Fork do projeto
+2. Crie uma Branch para sua Feature
+3. Commit suas mudanças
+4. Push para a Branch
 5. Abra um Pull Request
 
-## Licença
+## 📝 Licença
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes.
-
-## Contato
-
-João Pedro Cunha de Oliveira - oficialjoaocunha@Yahoo.com
-
-Link do Projeto: [https://github.com/JoaoOliveiraaa/python-posture-analyzer-software](https://github.com/JoaoOliveiraaa/python-posture-analyzer-software) 
+## 👥 Autores
+- [Joao Pedro Cunha de Oliveira - RA - 4200984]
+- [Luiz Eduardo Marques - RA 4200974]
+- [Lucas Frigeri Salaro - RA 4200988]
+- [Otávio Rodrigues da Silva - RA 4200992]
